@@ -1,0 +1,20 @@
+---
+###########################################
+# This is an auto generatd file.
+# Do not edit directly.
+# Refer to SearXNG_docker.org for details.
+###########################################
+- name: Ensure the general settings are applied
+  ansible.builtin.blockinfile:
+    path: "{{ searxng_path }}/searxng/settings.yml"
+    content: |
+      general{{ ":" }}
+        debug{{ ":" }} {{ searxng_debug }}
+        instance_name{{ ":" }} "{{ searxng_instance_name }}"
+        privacypolicy_url{{ ":" }} {{ searxng_privacypolicy_url }}
+        donation_url{{ ":" }} {{ searxng_donation_url }}
+        contact_url{{ ":" }} {{ searxng_contact_url }}
+        enable_metrics{{ ":" }} {{ searxng_enable_metrics }}
+    insertafter: "# {mark} ANSIBLE MANAGED BLOCK insertion 0"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK insertion 1"
+  notify: Restart_searxng

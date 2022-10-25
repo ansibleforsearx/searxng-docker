@@ -1,0 +1,23 @@
+---
+###########################################
+# This is an auto generatd file.
+# Do not edit directly.
+# Refer to SearXNG_docker.org for details.
+###########################################
+- name: Ensure we write the UI settings block
+  ansible.builtin.blockinfile:
+    path: "{{ searxng_path }}/searxng/settings.yml"
+    content: |
+      ui{{ ":" }}
+        static_use_hash{{ ":" }} {{ searxng_static_use_hash }}
+        default_locale{{ ":" }} "{{ searxng_default_locale }}"
+        query_in_title{{ ":" }} {{ searxng_query_in_title }}
+        infinite_scroll{{ ":" }} {{ searxng_infinite_scroll }}
+        center_alignment{{ ":" }} {{ searxng_center_alignment }}
+        cache_url{{ ":" }} {{ searxng_cache_url }}
+        default_theme{{ ":" }} {{ searxng_default_theme }}
+        theme_args{{ ":" }}
+          simple_style{{ ":" }} {{ searxng_simple_style }}
+    insertafter: "# {mark} ANSIBLE MANAGED BLOCK insertion 3"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK insertion 4"
+  notify: Restart_searxng

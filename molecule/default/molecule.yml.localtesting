@@ -1,0 +1,56 @@
+---
+###########################################
+# This is an auto generatd file.
+# Do not edit directly.
+# Refer to SearXNG_docker.org for details.
+###########################################
+dependency:
+  name: galaxy
+driver:
+  name: vagrant
+  provider:
+    name: libvirt
+  provision: false
+  cachier: machine
+  parallel: true
+lint: |
+  set -e
+  yamllint .
+  ansible-lint
+platforms:
+  - name: debian
+    box: debian/bullseye64
+    instance_raw_config_args:
+      - 'vm.synced_folder ".", "/vagrant", disabled: "true"'
+    memory: 1024
+    cpus: 1
+    provider_options:
+      video_type: 'vga'
+  - name: archlinux
+    box: archlinux/archlinux
+    instance_raw_config_args:
+      - 'vm.synced_folder ".", "/vagrant", disabled: "true"'
+    memory: 1024
+    cpus: 1
+    provider_options:
+      video_type: 'vga'
+  - name: suse
+    box: opensuse/Tumbleweed.x86_64
+    instance_raw_config_args:
+      - 'vm.synced_folder ".", "/vagrant", disabled: "true"'
+    memory: 1024
+    cpus: 1
+    provider_options:
+      video_type: 'vga'
+  - name: fedora
+    box: fedora/37-cloud-base
+    instance_raw_config_args:
+      - 'vm.synced_folder ".", "/vagrant", disabled: "true"'
+    memory: 1024
+    cpus: 1
+    provider_options:
+      video_type: 'vga'
+provisioner:
+  name: ansible
+verifier:
+  name: ansible

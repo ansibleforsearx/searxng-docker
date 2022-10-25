@@ -1,0 +1,20 @@
+---
+###########################################
+# This is an auto generatd file.
+# Do not edit directly.
+# Refer to SearXNG_docker.org for details.
+###########################################
+- name: Ensure the search settings are applied
+  ansible.builtin.blockinfile:
+    path: "{{ searxng_path }}/searxng/settings.yml"
+    content: |
+      search{{ ":" }}
+        safe_search{{ ":" }} {{ searxng_safe_search }}
+        autocomplete{{ ":" }} "{{ searxng_autocomplete }}"
+        default_lang{{ ":" }} "{{ searxng_default_lang }}"
+        ban_time_on_fail{{ ":" }} {{ searxng_ban_time_on_fail }}
+        max_ban_time_on_fail{{ ":" }} {{ searxng_max_ban_time_on_fail }}
+        formats{{ ":" }} [{{ searxng_formats }}]
+    insertafter: "# {mark} ANSIBLE MANAGED BLOCK insertion 1"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK insertion 2"
+  notify: Restart_searxng

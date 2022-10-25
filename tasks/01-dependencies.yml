@@ -1,0 +1,18 @@
+---
+###########################################
+# This is an auto generatd file.
+# Do not edit directly.
+# Refer to SearXNG_docker.org for details.
+###########################################
+- name: Ensure docker is installed
+  ansible.builtin.package:
+    name:
+      - docker
+      - docker-compose
+  when: "ansible_facts['os_family'] != 'RedHat'"
+  notify: Start_docker
+- name: Ensure git and openssl are installed
+  ansible.builtin.package:
+    name:
+      - git
+      - openssl

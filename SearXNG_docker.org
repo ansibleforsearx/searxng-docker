@@ -1,0 +1,1250 @@
+#+title:SearXNG_docker ansible role
+#+STARTUP: align
+#+OPTIONS: toc:t
+- [[https://en.wikipedia.org/wiki/Literate_programming][Literate programming]] was used to create this role. All the files used by it including the readme file are auto-generated from this document. No edits should be made to any files other then this one. [[https://www.gnu.org/software/emacs/][Emacs]] with [[https://orgmode.org/][org-mode]] is the authors preferred development environment. it was tested using vagrant boxes for {Archlinux, Debian, Open suse, fedora}
+* Git
+Git is used for version control over these files and like any good Git repo we have a .gitignore file.
+** .gitignore
+#+begin_src shell :tangle ./.gitignore
+
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  !.gitignore
+  !.yamllint
+  !.ansible-lint
+  !.localtesting
+  !*.org
+  !*.md
+  !**/*.yml
+  !**/*.yaml
+  !**/inventory
+  !LICENSE
+
+#+end_src
+* Tasks
+Upon this foundation I shall build glory.
+** main.yml
+I group tasks for a specific purpose into a single file and reference them here as I find yaml files that are simply one massive list of tasks cumbersome to work with.
+Since SearXNG is a service we'll need to know if it's installed or not and if it's running or not.
+#+begin_src yaml :tangle ./tasks/main.yml
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  - name: Include tasks
+    ansible.builtin.include_tasks: 00-facts.yml
+
+#+end_src
+*** 00-facts.yml
+Use ansible built-in module to gather facts. 
+#+begin_src yaml :tangle ./tasks/00-facts.yml
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  - name: Gather facts
+    ansible.builtin.service_facts:
+
+#+end_src
+** main.yml
+SearXNG provides a docker container to handle the heavy lifting of it's service deployment. This role deplys and configures it therefore it's dependencies are our dependencies.
+#+begin_src yaml :tangle ./tasks/main.yml
+
+  - name: Include tasks
+    ansible.builtin.include_tasks: 01-dependencies.yml
+
+#+end_src
+*** 01-dependencies.yml
+Since we want this role to work with the broadest possible range of hosts we'll use ansible's built-in [[https://docs.ansible.com/ansible/latest/collections/ansible/builtin/package_module.html][package]] module to install our dependencies. We're using geerlingguy's docker install for REHL family OS's so no need to duplicate that work here. And apparently we can't take the existance of openssl for granted either. Dang snowflake distros.
+#+begin_src yaml :tangle ./tasks/01-dependencies.yml
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  - name: Ensure docker is installed
+    ansible.builtin.package:
+      name:
+        - docker
+        - docker-compose
+    when: "ansible_facts['os_family'] != 'RedHat'"
+    notify: Start_docker
+  - name: Ensure git and openssl are installed
+    ansible.builtin.package:
+      name:
+        - git
+        - openssl
+
+#+end_src
+** main.yml
+With our hosts ready we can start the SearXNG install process.
+#+begin_src yaml :tangle ./tasks/main.yml
+
+  - name: Include tasks
+    ansible.builtin.include_tasks: 02-installSearXNG.yml
+
+#+end_src
+*** 02-installSearXNG.yml
+The heart of the install process is really just cloning their docker conainer repo.
+#+begin_src yaml :tangle ./tasks/02-installSearXNG.yml
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  - name: Check for the git repo
+    ansible.builtin.stat:
+      path: "{{ searxng_path }}/.git"
+    register: repo_path
+  - name: Ensure Searx is installed
+    ansible.builtin.git:
+      repo: "{{ searxng_repo }}"
+      dest: "{{ searxng_path }}"
+      clone: true
+      version: "{{ searxng_sha1 }}"
+    when: not repo_path.stat.exists
+
+#+end_src
+**** defaults/main.yml
+It's possible that the SearXNG development team decides to move the docker container repo and the author of this role isn't mainting it anymore. Therefore we expose the public git repo path as a variable. It's also feasable that users may want to change the default install path, or even the service name.
+#+begin_src yaml :tangle ./defaults/main.yml
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  searxng_repo: 'https://github.com/searxng/searxng-docker.git'
+  searxng_sha1: 'd4f06df911e91803d6af48b8f0e060f08429b767'
+  searxng_path: '/usr/local/searxng-docker'
+  searxng_service_name: 'searxng-docker.service'
+
+#+end_src
+** main.yml
+Now it's time for some optional parameters
+#+begin_src yaml :tangle ./tasks/main.yml
+
+  - name: Include tasks
+    ansible.builtin.include_tasks: 03-envVariables.yml
+
+#+end_src
+*** 03-envVariables.yml
+The .env file has some options we can set. Let's expose them for our users.
+#+begin_src yaml :tangle ./tasks/03-envVariables.yml
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  - name: Ensure we can replace .env file settings
+    ansible.builtin.lineinfile:
+      path: "{{ searxng_path }}/.env"
+      regexp: "{{ item.regexp }}"
+      line: "{{ item.line }}"
+    with_items:
+      - regexp: '# SEARXNG_HOSTNAME='
+        line: "{{ searxng_hostname }}"
+      - regexp: '# LETSENCRYPT='
+        line: "{{ searxng_letsencrypt }}"
+
+#+end_src
+**** defaults/main.yml
+Expose the .env file values so users can overwrite if they want to
+#+begin_src yaml :tangle ./defaults/main.yml
+  
+  searxng_hostname: '# SEARXNG_HOSTNAME=<host>'
+  searxng_letsencrypt: '# LETSENCRYPT_EMAIL=<email>'
+
+#+end_src
+** main.yml
+The default settings file provided by searxng isn't as helpful as it could be. We'll write our own.
+#+begin_src yaml :tangle ./tasks/main.yml
+
+  - name: Include tasks
+    ansible.builtin.include_tasks: 04-new_settings.yml
+
+#+end_src
+*** 04-new_settings.yml
+- In this section we need to determine if we're installing SearXNG fresh or re-provisioning for a settings update. To accomplish this we write an additional comment to the settings file and check for the existance of that comment. If it's not found it's a fresh install so we take our code down that fork if it does exist it's an update so we take the other fork.
+- Also handled in this section is the SearXNG "UltraSecretKey" it is used by SearXNG for cryptograpy and is by design a long string of random characters unique to each host. it's random nature makes finding the value from the settings file difficult and costly as the file would need to be read and parsed. Another option would be to store the key in host variables on the ansible controller but then you have a central location that knows potentially senistive information about multiple hosts. While this may work in the short term we'd be expecting our users to realize this and take those settings with them every time they setup a new controller. Not very pratical. To resolve these issues we save the key to a new file named key next to the settings file. This gives us a known location where we can find the key preventing us from re-generating it on a previously provisioned host. The key is by default stored in plain text in the settings file so having it stored the same way in one more file shouldn't cause any additional security concern. 
+#+begin_src yaml :tangle ./tasks/04-new_settings.yml
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  - name: Ensure we check for default settings file
+    ansible.builtin.lineinfile:
+      path: "{{ searxng_path }}/searxng/settings.yml"
+      line: "# This is an ansible managed file."
+      state: present
+    check_mode: true
+    register: default_settings_file
+  - name: Ensure we remove the default settings file
+    ansible.builtin.file:
+      path: "{{ searxng_path }}/searxng/settings.yml"
+      state: absent
+    when: default_settings_file is changed  # noqa: no-handler
+  - name: Ensure we create a key file
+    ansible.builtin.shell:
+      'echo $(openssl rand -hex 32) >> {{ searxng_path }}/searxng/key'
+    when: default_settings_file is changed  # noqa: no-handler
+  - name: Ensure we update the use defaults settings value
+    ansible.builtin.blockinfile:
+      path: "{{ searxng_path }}/searxng/settings.yml"
+      content: |
+        # This is an ansible managed file.
+        use_default_settings{{ ":" }} {{ searxng_default_settings }}
+      create: true
+      mode: '0655'
+      marker: "# {mark} ANSIBLE MANAGED BLOCK insertion 0"
+    notify: Restart_searxng
+
+#+end_src
+**** defaults/main.yml
+Expose the new settings to the user
+#+begin_src yaml :tangle ./defaults/main.yml
+
+  searxng_default_settings: 'true'
+  
+#+end_src 
+** main.yml
+Now to the meat of it, configuring settings.yml
+#+begin_src yaml :tangle ./tasks/main.yml
+
+  - name: Include tasks
+    ansible.builtin.include_tasks: 05-settings_general.yml
+
+#+end_src
+*** 05-settings_general.yml
+Adds the general config block to the settings file
+#+begin_src yaml :tangle ./tasks/05-settings_general.yml
+
+   ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  - name: Ensure the general settings are applied
+    ansible.builtin.blockinfile:
+      path: "{{ searxng_path }}/searxng/settings.yml"
+      content: |
+        general{{ ":" }}
+          debug{{ ":" }} {{ searxng_debug }}
+          instance_name{{ ":" }} "{{ searxng_instance_name }}"
+          privacypolicy_url{{ ":" }} {{ searxng_privacypolicy_url }}
+          donation_url{{ ":" }} {{ searxng_donation_url }}
+          contact_url{{ ":" }} {{ searxng_contact_url }}
+          enable_metrics{{ ":" }} {{ searxng_enable_metrics }}
+      insertafter: "# {mark} ANSIBLE MANAGED BLOCK insertion 0"
+      marker: "# {mark} ANSIBLE MANAGED BLOCK insertion 1"
+    notify: Restart_searxng
+
+#+end_src
+**** defaults/main.yml
+Expose the new settings to the user
+#+begin_src yaml :tangle ./defaults/main.yml
+
+  searxng_debug: 'false'
+  searxng_instance_name: 'SearXNG'
+  searxng_privacypolicy_url: 'false'
+  searxng_donation_url: 'https://docs.searxng.org/donate.html'
+  searxng_contact_url: 'false'
+  searxng_enable_metrics: 'true'
+
+#+end_src
+** main.yml
+Search settings, handy for a metasearch engine
+#+begin_src yaml :tangle ./tasks/main.yml
+
+  - name: Include tasks
+    ansible.builtin.include_tasks: 07-settings_search.yml
+
+#+end_src
+*** 07-settings_search.yml
+Adds the search config block to the settings file.
+#+begin_src yaml :tangle ./tasks/07-settings_search.yml
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  - name: Ensure the search settings are applied
+    ansible.builtin.blockinfile:
+      path: "{{ searxng_path }}/searxng/settings.yml"
+      content: |
+        search{{ ":" }}
+          safe_search{{ ":" }} {{ searxng_safe_search }}
+          autocomplete{{ ":" }} "{{ searxng_autocomplete }}"
+          default_lang{{ ":" }} "{{ searxng_default_lang }}"
+          ban_time_on_fail{{ ":" }} {{ searxng_ban_time_on_fail }}
+          max_ban_time_on_fail{{ ":" }} {{ searxng_max_ban_time_on_fail }}
+          formats{{ ":" }} [{{ searxng_formats }}]
+      insertafter: "# {mark} ANSIBLE MANAGED BLOCK insertion 1"
+      marker: "# {mark} ANSIBLE MANAGED BLOCK insertion 2"
+    notify: Restart_searxng
+
+#+end_src
+**** defaults/main.yml
+Expose these settings also
+#+begin_src yaml :tangle ./defaults/main.yml
+
+  searxng_safe_search: '0'
+  searxng_autocomplete: ''
+  searxng_default_lang: ''
+  searxng_ban_time_on_fail: '5'
+  searxng_max_ban_time_on_fail: '120'
+  searxng_formats: 'html,'
+
+#+end_src
+** main.yml
+The server section
+#+begin_src yaml :tangle ./tasks/main.yml
+
+  - name: Include tasks
+    ansible.builtin.include_tasks: 08-settings_server.yml
+
+#+end_src
+*** 08-settings_server.yml
+A few features of the server block. We'll also need our secret key for the next section.
+#+begin_src yaml :tangle ./tasks/08-settings_server.yml
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  - name: Ensure we have the ultra secret key
+    ansible.builtin.slurp:
+      src: "{{ searxng_path }}/searxng/key"
+    register: secret_key
+  - name: Ensure we write the server settings block
+    ansible.builtin.blockinfile:
+      path: "{{ searxng_path }}/searxng/settings.yml"
+      content: |
+        server{{ ":" }}
+          base_url{{ ":" }} {{ searxng_base_url }}
+          port{{ ":" }} {{ searxng_port }}
+          bind_address{{ ":" }} "{{ searxng_bind_address }}"
+          secret_key{{ ":" }} "{{ secret_key.content }}"
+          limiter{{ ":" }} {{ searxng_limiter }}
+          image_proxy{{ ":" }} {{ searxng_image_proxy }}
+      insertafter: "# {mark} ANSIBLE MANAGED BLOCK insertion 2"
+      marker: "# {mark} ANSIBLE MANAGED BLOCK insertion 3"
+    notify: Restart_searxng
+
+#+end_src
+**** defaults/main.yml
+We'll expose everything execpt the ultra secret key. That we'll keep to ourselves since it's ultra secret.
+#+begin_src yaml :tangle ./defaults/main.yml
+
+  searxng_base_url: 'false'
+  searxng_port: '8888'
+  searxng_bind_address: '127.0.0.1'
+  searxng_limiter: 'false'
+  searxng_image_proxy: 'false'
+
+#+end_src
+** main.yml
+The UI section
+#+begin_src yaml :tangle ./tasks/main.yml
+
+  - name: Include tasks
+    ansible.builtin.include_tasks: 09-settings_ui.yml
+
+#+end_src
+*** 09-settings_ui.yml
+Looks fairly straight forward
+#+begin_src yaml :tangle ./tasks/09-settings_ui.yml
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  - name: Ensure we write the UI settings block
+    ansible.builtin.blockinfile:
+      path: "{{ searxng_path }}/searxng/settings.yml"
+      content: |
+        ui{{ ":" }}
+          static_use_hash{{ ":" }} {{ searxng_static_use_hash }}
+          default_locale{{ ":" }} "{{ searxng_default_locale }}"
+          query_in_title{{ ":" }} {{ searxng_query_in_title }}
+          infinite_scroll{{ ":" }} {{ searxng_infinite_scroll }}
+          center_alignment{{ ":" }} {{ searxng_center_alignment }}
+          cache_url{{ ":" }} {{ searxng_cache_url }}
+          default_theme{{ ":" }} {{ searxng_default_theme }}
+          theme_args{{ ":" }}
+            simple_style{{ ":" }} {{ searxng_simple_style }}
+      insertafter: "# {mark} ANSIBLE MANAGED BLOCK insertion 3"
+      marker: "# {mark} ANSIBLE MANAGED BLOCK insertion 4"
+    notify: Restart_searxng
+
+#+end_src
+**** defaults/main.yml
+expose this too.
+#+begin_src yaml :tangle ./defaults/main.yml
+
+  searxng_static_use_hash: 'false'
+  searxng_default_locale: ''
+  searxng_query_in_title: 'false'
+  searxng_infinite_scroll: 'false'
+  searxng_center_alignment: 'false'
+  searxng_cache_url: 'https://web.archive.org/web/'
+  searxng_default_theme: 'simple'
+  searxng_simple_style: 'auto'
+
+#+end_src
+** main.yml
+Adds the redist section
+#+begin_src yaml :tangle ./tasks/main.yml
+
+  - name: Include tasks
+    ansible.builtin.include_tasks: 10-settings_redis.yml
+
+#+end_src
+*** 10-settings_redis.yml
+Not sure what this is.
+#+begin_src yaml :tangle ./tasks/10-settings_redis.yml
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  - name: Ensure we write the redis settings block
+    ansible.builtin.blockinfile:
+      path: "{{ searxng_path }}/searxng/settings.yml"
+      content: |
+        redis{{ ":" }}
+          url{{ ":" }} {{ searxng_redis_url }}
+      insertafter: "# {mark} ANSIBLE MANAGED BLOCK insertion 4"
+      marker: "# {mark} ANSIBLE MANAGED BLOCK insertion 5"
+    notify: Restart_searxng
+
+#+end_src
+**** defaults/main.yml
+Let the people who do understand it make changes.
+#+begin_src yaml :tangle ./defaults/main.yml
+
+  searxng_redis_url: 'redis://redis:6379/0'
+
+#+end_src
+** main.yml
+Setup the outgoing settings block
+#+begin_src yaml :tangle ./tasks/main.yml
+
+  - name: Include tasks
+    ansible.builtin.include_tasks: 11-settings_outgoing.yml
+
+#+end_src
+The outgoing settings, these are your connection settings
+#+begin_src yaml :tangle ./tasks/11-settings_outgoing.yml
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  - name: Ensure we write the outgoing settings block
+    ansible.builtin.blockinfile:
+      path: "{{ searxng_path }}/searxng/settings.yml"
+      content: |
+        outgoing{{ ":" }}
+          request_timeout{{ ":" }} {{ searxng_request_timeout }}
+          max_request_timeout{{ ":" }} {{ searxng_max_request_timeout }}
+          useragent_suffix{{ ":" }} "{{ searxng_useragent_suffix }}"
+          pool_connections{{ ":" }} {{ searxng_pool_connections }}
+          pool_maxsize{{ ":" }} {{ searxng_pool_maxsize }}
+          enable_http2{{ ":" }} {{ searxng_enable_http2 }}
+      insertafter: "# {mark} ANSIBLE MANAGED BLOCK insertion 5"
+      marker: "# {mark} ANSIBLE MANAGED BLOCK insertion 6"
+    notify: Restart_searxng
+
+#+end_src
+**** defaults/main.yml
+May as well expose everything at this point.
+#+begin_src yaml :tangle ./defaults/main.yml
+
+  searxng_request_timeout: '2.0'
+  searxng_max_request_timeout: '10.0'
+  searxng_useragent_suffix: ''
+  searxng_pool_connections: '100'
+  searxng_pool_maxsize: '10'
+  searxng_enable_http2: 'true'
+
+#+end_src
+** main.yml
+customize the Systemd service file
+#+begin_src yaml :tangle ./tasks/main.yml
+
+  - name: Include tasks
+    ansible.builtin.include_tasks: 98-configureService.yml
+
+#+end_src
+*** 98-configureService.yml
+Using the default service file provided by SearXNG here just updating paths so it can be used in mublitple distros. For REHL family systems the path to docker-compose is known so the variable searxng_path_to_docker_compose will be ignored.
+#+begin_src yaml :tangle ./tasks/98-configureService.yml
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  - name: Register the service file
+    ansible.builtin.stat:
+      path: "{{ searxng_path }}/{{ searxng_service_name }}"
+    register: service_file
+  - name: Ensure the SearXNG service file is copied
+    ansible.builtin.copy:
+      remote_src: true
+      src: "{{ searxng_path }}/searxng-docker.service.template"
+      dest: "{{ searxng_path }}/{{ searxng_service_name }}"
+      mode: '0655'
+    when: not service_file.stat.exists
+  - name: Ensure the SearxNG install path is updated in the service file
+    ansible.builtin.replace:
+      path: "{{ searxng_path }}/{{ searxng_service_name }}"
+      regexp: "/usr/local/searxng-docker"
+      replace: "{{ searxng_path }}"
+    notify: Restart_searxng
+  - name: Ensure the docker-compose path is fixed
+    ansible.builtin.replace:
+      path: "{{ searxng_path }}/{{ searxng_service_name }}"
+      regexp: "/usr/local/bin"
+      replace: "{{ searxng_path_to_docker_compose }}"
+    when: "ansible_facts['os_family'] != 'RedHat'"
+
+#+end_src
+**** defaults/main.yml
+Expose the path to docker compose so users can override the default if needed
+#+begin_src yaml :tangle ./defaults/main.yml
+  
+  searxng_path_to_docker_compose: '/usr/bin'
+
+#+end_src
+** main.yml
+Now that we have a pretty good service file let's link it up with Systemd so we can use our builtin modules to control it
+#+begin_src yaml :tangle ./tasks/main.yml
+
+  - name: Include tasks
+    ansible.builtin.include_tasks: 99-startService.yml
+
+#+end_src
+*** 99-startService.yml
+Now that it's configured we can enable and start the service
+#+begin_src yaml :tangle ./tasks/99-startService.yml
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  - name: Register the new service file
+    ansible.builtin.stat:
+      path: "{{ searxng_path_to_systemd_units }}/{{ searxng_service_name }}"
+    register: new_service_file
+  - name: Ensure the SearXNG service file is copied for systemd
+    ansible.builtin.copy:
+      remote_src: true
+      src: "{{ searxng_path }}/{{ searxng_service_name }}"
+      dest: "{{ searxng_path_to_systemd_units }}/{{ searxng_service_name }}"
+      mode: '0655'
+    when: not new_service_file.stat.exists
+  - name: Ensure SearXNG loads at startup
+    ansible.builtin.service:
+      name: "{{ searxng_service_name }}"
+      enabled: true
+
+#+end_src
+**** defaults/main.yml
+Expose the path to systemd unit files so users can override if necessary
+#+begin_src yaml :tangle ./defaults/main.yml
+
+  searxng_path_to_systemd_units: '/etc/systemd/system'
+
+#+end_src
+**** handlers/main.yml
+We'll need to make a handler for the service to satisy ansible item potency checks
+#+begin_src yaml :tangle ./handlers/main.yml
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  - name: Start_docker
+    ansible.builtin.service:
+      name: docker.service
+      state: started
+      enabled: true
+  - name: Restart_searxng
+    ansible.builtin.service:
+      name: "{{ searxng_service_name }}"
+      state: restarted
+
+#+end_src
+* ansible galaxy
+This role is intended to be distributed to the [[https://galaxy.ansible.com/][ansible-galaxy]] and it has certian requirements that need to be meet. The first of which is a readme.
+** README.md
+#+begin_src markdown :tangle ./README.md
+
+  SearXNG_docker
+  ==============
+  Install and configure [SearXNG](https://github.com/searxng/searxng) as a docker image.
+
+  Verified working Linux distros
+  ------------------------------
+  - Arch Linux
+  - Debian bullseye
+  - openSUSE Tumbleweed
+  - Fedora 37 <br/><br/> [![CI](https://github.com/ansibleforsearx/searxng-docker/actions/workflows/CI.yml/badge.svg)](https://github.com/ansibleforsearx/searxng-docker/actions/workflows/CI.yml)
+
+  This role will probabbly work on the majority of Systemd distros but I can't test them all.
+
+  Role Variables
+  --------------
+  Here are the variables and their defaults for more information refer to the [project documentation](https://docs.searxng.org/).
+  ```yaml
+  searxng_repo: 'https://github.com/searxng/searxng-docker.git'
+    # If you're maintaing an on premisis fork of the searxng-docker repo
+    # you should put it here that way multiple hosts don't need to go all
+    # the way out to github for it.
+  searxng_sha1: 'd4f06df911e91803d6af48b8f0e060f08429b767'
+    # The sha1 hash of the searxng docker repo used during testings. If
+    # you overwrite this default I can't garentee sucess.
+  searxng_path: '/usr/local/searxng-docker'
+    # Where searxng will be installed
+  searxng_service_name: 'searxng-docker.service'
+    # The name of the Systemd service
+  searxng_hostname: '# SEARXNG_HOSTNAME=<host>'
+  searxng_letsencrypt: '# LETSENCRYPT_EMAIL=<email>'
+    # If you're going to change the above two variables provide the full
+    # uncommented line. For example:
+    # searxng_hostname: 'SEARXNG_HOSTNAME=MyWonderfulHost'
+  searxng_default_settings: 'true'
+  searxng_debug: 'false'
+  searxng_instance_name: 'SearXNG'
+  searxng_privacypolicy_url: 'false'
+  searxng_donation_url: 'https://docs.searxng.org/donate.html'
+  searxng_contact_url: 'false'
+  searxng_enable_metrics: 'true'
+  searxng_safe_search: '0'
+  searxng_autocomplete: ''
+    # This is where SearXNG gets it's autocomplete data. options include:
+    #   'dbpedia'
+    #   'duckduckgo'
+    #   'google'
+    #   'startpage'
+    #   'swisscows'
+    #   'qwant'
+    #   'wikipedia'
+  searxng_default_lang: ''
+    # leave blank to detect from browser information or use codes from
+    # git://searx/languages.py.
+  searxng_ban_time_on_fail: '5'
+  searxng_max_ban_time_on_fail: '120'
+  searxng_formats: 'html,'
+    # use a comma seperated list of formats here. example 'html, csv, json, rss' 
+  searxng_base_url: 'false'
+  searxng_port: '8888'
+  searxng_bind_address: '127.0.0.1'
+  searxng_limiter: 'false'
+  searxng_image_proxy: 'false'
+  searxng_static_use_hash: 'false'
+  searxng_default_locale: ''
+  searxng_query_in_title: 'false'
+  searxng_infinite_scroll: 'false'
+  searxng_center_alignment: 'false'
+  searxng_cache_url: 'https://web.archive.org/web/'
+  searxng_default_theme: 'simple'
+  searxng_simple_style: 'auto'
+    # The SearXNG UI theme, options include 'auto' 'light' 'dark'
+  searxng_redis_url: 'redis://redis:6379/0'
+  searxng_request_timeout: '2.0'
+  searxng_max_request_timeout: '10.0'
+  searxng_useragent_suffix: ''
+  searxng_pool_connections: '100'
+  searxng_pool_maxsize: '10'
+  searxng_enable_http2: 'true'
+  searxng_path_to_docker_compose: '/usr/bin'
+  # See REHL OS family hosts below for more detail.
+  searxng_path_to_systemd_units: '/etc/systemd/system'
+  ```
+
+  Example Playbook
+  ----------------
+  Here's what the author uses to configure his laptop. 
+  ```yaml
+  - hosts: all
+    become: true
+  - role: ansibleforsearx.searxng_docker
+      vars:
+        searxng_enable_metrics: 'false'
+        searxng_instance_name: 'MySearXNG'
+        searxng_autocomplete: 'duckduckgo'
+        searxng_simple_style: 'dark'
+        searxng_infinite_scroll: 'true'
+  ```
+  My browser's homepage is http://localhost as is it's default search engine. I clear cookies on exit with an exception for localhost. The individual search engine settings are stored in the browser cookie. I use https everwhere with an exception for localhost.
+
+  REHL OS family hosts
+  --------------------
+  This role uses the geerlingguy.docker role to install the docker dependencies on REHL OS family hosts. As such the path to docker compose is known and the searxng_path_to_docker_compose variable is ignored on those hosts. The geerlingguy.docker role dependency should install itself when you install this role.
+
+  License
+  -------
+  [GPL 3.0](https://www.gnu.org/licenses/gpl-3.0.en.html)
+
+  Author Information
+  ------------------
+  I'm a consumer of this amazing product. This is my contribution.<br/>
+  ,*This is an auto generated file do not edit it directly.*<br/>
+  ,*Refer to [SearXNG_docker.org](./SearXNG_docker.org) for more details.*<br/><br/>
+
+
+#+end_src
+*** meta/main.yml
+Metadata used by ansible galaxy
+#+begin_src yaml :tangle ./meta/main.yml
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  galaxy_info:
+    role_name: searxng_docker
+    author: Searx Guy
+    namespace: ansibleforsearx
+    description: Install and configure SearXNG as a docker image.
+    license: GPL-3.0-only
+    min_ansible_version: '2.1'
+    platforms:
+      - name: ArchLinux
+        release:
+          - any
+      - name: Debian
+        release:
+          - bullseye
+      - name: opensuse
+        release:
+          - 42.3
+      - name: Fedora
+        release:
+          - 37
+      - name: GenericLinux
+        release:
+          - any
+    galaxy_tags:
+      - web
+      - system
+      - cloud
+      - search
+      - privacy
+      - database
+      - google
+      - deploy
+      - configuration
+      - docker
+      - searx
+      - searxng
+  dependencies:
+    - role: geerlingguy.docker
+      vars:
+        docker_compose_package_state: present
+      when: "ansible_facts['os_family'] == 'RedHat'"
+
+#+end_src
+** requirements.yml
+We've included another role as a dependency to our own. To ensure our customers can use that role we need to also make it a requirment. This way when users install this role that role should get installed as well.
+#+begin_src yaml :tangle ./requirements.yml
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  - name: geerlingguy.docker
+
+#+end_src
+** vars/main.yml
+It appears this file is required for CI/CD
+#+begin_src yaml :tangle ./vars/main.yml
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  
+#+end_src
+* testing
+Perhaps I should have started here. When you write your roles you should start with testing.
+** .yamllint
+#+begin_src yaml :tangle ./.yamllint
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  extends: default
+  rules:
+    truthy:
+      allowed-values:
+        - 'true'
+        - 'false'
+        - 'yes'
+        - 'no'
+    line-length:
+      level: warning
+
+#+end_src
+*** .ansible-lint
+#+begin_src yaml :tangle ./.ansible-lint
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  warn_list:
+    - yaml[line-length]
+
+#+end_src
+** molecule
+Just the defaults for now
+*** converge.yml.localbackup
+#+begin_src yaml :tangle ./molecule/default/converge.yml.localbackup
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  - name: Converge
+    hosts: all
+    gather_facts: true
+    become: true
+    pre_tasks:
+      - name: Update apt cache
+        ansible.builtin.apt:
+          update_cache: yes
+        when: ansible_pkg_mgr == "apt"
+      - name: Update yum cache
+        ansible.builtin.yum:
+          update_cache: yes
+        when: ansible_pkg_mgr == "yum"
+      - name: Update apk cache
+        community.general.packaging.os.apk:
+          update_cache: yes
+        when: ansible_pkg_mgr == "apk"
+      - name: Update dnf cache
+        ansible.builtin.dnf:
+          update_cache: yes
+        when: ansible_pkg_mgr == "dnf"
+      - name: Update zypper cache
+        community.general.packaging.os.zypper:
+          name: zypper
+          update_cache: yes
+        when: ansible_pkg_mgr == "zypper"
+      - name: Update arch packages
+        community.general.packaging.os.pacman:
+          update_cache: yes
+          upgrade: yes
+        when: ansible_pkg_mgr == "pacman"
+        register: update_arch
+      - name: Reboot arch
+        ansible.builtin.reboot:
+        when: update_arch is changed  # noqa: no-handler
+    tasks:
+      - name: "Include ansibleforsearx.searxng_docker"
+        ansible.builtin.include_role:
+          name: "ansibleforsearx.searxng_docker"
+
+#+end_src
+*** converge.yml
+#+begin_src yaml :tangle ./molecule/default/converge.yml
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  - name: Converge
+    hosts: all
+    gather_facts: true
+    become: true
+    pre_tasks:
+      - name: Update apt cache
+        ansible.builtin.apt:
+          update_cache: yes
+        when: ansible_pkg_mgr == "apt"
+      - name: Update yum cache
+        ansible.builtin.yum:
+          update_cache: yes
+        when: ansible_pkg_mgr == "yum"
+      - name: Update apk cache
+        community.general.packaging.os.apk:
+          update_cache: yes
+        when: ansible_pkg_mgr == "apk"
+      - name: Update dnf cache
+        ansible.builtin.dnf:
+          update_cache: yes
+        when: ansible_pkg_mgr == "dnf"
+      - name: Update zypper cache
+        community.general.packaging.os.zypper:
+          name: zypper
+          update_cache: yes
+        when: ansible_pkg_mgr == "zypper"
+      - name: Update arch packages
+        community.general.packaging.os.pacman:
+          update_cache: yes
+          upgrade: yes
+        when: ansible_pkg_mgr == "pacman"
+    tasks:
+      - name: "Include ansibleforsearx.searxng_docker"
+        ansible.builtin.include_role:
+          name: "ansibleforsearx.searxng_docker"
+
+#+end_src
+*** molecule.yml.localtesting
+If you have the resources using full virtual machines for testing makes development a lot easier. But when you pay money per cpu cycle use as little as possible.
+#+begin_src yaml :tangle ./molecule/default/molecule.yml.localtesting
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  dependency:
+    name: galaxy
+  driver:
+    name: vagrant
+    provider:
+      name: libvirt
+    provision: false
+    cachier: machine
+    parallel: true
+  lint: |
+    set -e
+    yamllint .
+    ansible-lint
+  platforms:
+    - name: debian
+      box: debian/bullseye64
+      instance_raw_config_args:
+        - 'vm.synced_folder ".", "/vagrant", disabled: "true"'
+      memory: 1024
+      cpus: 1
+      provider_options:
+        video_type: 'vga'
+    - name: archlinux
+      box: archlinux/archlinux
+      instance_raw_config_args:
+        - 'vm.synced_folder ".", "/vagrant", disabled: "true"'
+      memory: 1024
+      cpus: 1
+      provider_options:
+        video_type: 'vga'
+    - name: suse
+      box: opensuse/Tumbleweed.x86_64
+      instance_raw_config_args:
+        - 'vm.synced_folder ".", "/vagrant", disabled: "true"'
+      memory: 1024
+      cpus: 1
+      provider_options:
+        video_type: 'vga'
+    - name: fedora
+      box: fedora/37-cloud-base
+      instance_raw_config_args:
+        - 'vm.synced_folder ".", "/vagrant", disabled: "true"'
+      memory: 1024
+      cpus: 1
+      provider_options:
+        video_type: 'vga'
+  provisioner:
+    name: ansible
+  verifier:
+    name: ansible
+
+#+end_src
+*** verify.yml
+#+begin_src yaml :tangle ./molecule/default/verify.yml
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  - name: Verify
+    hosts: all
+    gather_facts: true
+    tasks:
+      - name: The systemd unit was created correctly
+        ansible.builtin.assert:
+          that:
+            ansible.builtin.stat:
+              path: '/etc/systemd/system/searxng-docker.service'
+            register: systemd_unit
+            failes_when:
+              - "systemd_unit.stat.exists != true"
+              - "systemd_unit.stat.readable != true"
+              - "systemd_unit.stat.size != 407 and ansible_facts['os_family'] != 'RedHat'"
+              - "systemd_unit.stat.size != 419 and ansible_facts['os_family'] == 'RedHat'"
+      - name: The settings file was created correctly
+        ansible.builtin.assert:
+          that:
+            ansible.builtin.stat:
+              path: '/usr/local/searxng-docker/searxng/settings.yml'
+            register: settings_file
+            fails_when:
+              - "settings_file.stat.exists != true"
+              - "settings_file.stat.readable != true"
+              - "settings_file.stat.size != 1564"
+      - name: The key file was created correctly
+        ansible.builtin.assert:
+          that:
+            ansible.builtin.stat:
+              path: '/usr/local/searxng-docker/searxng/key'
+            register: key_file
+            fails_when:
+              - "key_file.stat.exists != true"
+              - "key_file.stat.readable != true"
+              - "key_file.stat.size != 65"
+      - name: The env file was created correctly
+        ansible.builtin.assert:
+          that:
+            ansible.builtin.stat:
+              path: '/usr/local/searxng-docker/.env'
+            register: env_file
+            fails_when:
+              - "env_file.stat.exists != true"
+              - "env_file.stat.readable != true"
+              - "env_file.stat.size != 304"
+      - name: The docker container redist is running
+        ansible.builtin.assert:
+          that:
+            - docker_container_info:
+                name: redis
+              register: redist
+              fails_when: redist.exists != true
+      - name: The docker container caddy is running
+        ansible.builtin.assert:
+          that:
+            - docker_container_info:
+                name: caddy
+              register: caddy
+              fails_when: caddy.exists != true
+      - name: The docker container searxng is running
+        ansible.builtin.assert:
+          that:
+            - docker_container_info:
+                name: searxng
+              register: searxng
+              fails_when: searxng.exists != true
+      - name: Searxng service is enabled
+        ansible.builtin.assert:
+          that:
+            - ansible.builtin.service:
+                name: "searxng-docker.service"
+                enabled: true
+                check_mode: true
+      - name: Searxng is running
+        ansible.builtin.assert:
+          that:
+            - ansible.builtin.uri:
+                url: http://localhost
+                return_content: true
+              register: this
+              failed_when: "'searxng' is not in content"
+
+#+end_src
+*** molecule.yml
+Fpr lightweight testing in github we'll use docker containsers
+#+begin_src yaml :tangle ./molecule/default/molecule.yml
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  dependency:
+    name: galaxy
+  driver:
+    name: docker
+  lint: |
+    set -e
+    yamllint .
+    ansible-lint
+  platforms:
+    - name: Debian_11
+      image: "monolithprojects/systemd-debian11:latest"
+      command: ${MOLECULE_DOCKER_COMMAND:-""}
+      volumes:
+        - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      privileged: true
+      pre_build_image: true
+    - name: Fedora_37
+      image: "geerlingguy/docker-fedora37-ansible:latest"
+      command: ${MOLECULE_DOCKER_COMMAND:-""}
+      volumes:
+        - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      privileged: true
+      pre_build_image: true
+    - name: ArchLinux
+      image: "chzerv/archlinux-systemd-ansible:latest"
+      command: ${MOLECULE_DOCKER_COMMAND:-""}
+      volumes:
+        - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      privileged: true
+      pre_build_image: true
+    - name: Suse_Tumbleweed
+      image: "searxguy/docker-opensusetumbleweed-ansible:latest"
+      command: ${MOLECULE_DOCKER_COMMAND:-""}
+      volumes:
+        - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      privileged: true
+      pre_build_image: true
+  provisioner:
+    name: ansible
+
+#+end_src
+* GitHub
+setup CI testing
+*** CI.yml
+Handles the CI workflow in github
+#+begin_src yaml :tangle ./.github/workflows/CI.yml
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly.
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  name: CI
+  on:
+    pull_request:
+    push:
+      branches:
+        - master
+  jobs:
+    Test:
+      name: Test
+      runs-on: ubuntu-latest
+      strategy:
+        matrix:
+          platform:
+            - ArchLinux
+            - Debian_11
+            - Fedora_37
+            - Suse_Tumbleweed
+      steps:
+        - name: Checkout codebase
+          uses: actions/checkout@v2
+        - name: Setup python
+          uses: actions/setup-python@v2
+          with:
+            python-version: '3.x'
+        - name: Install test dependencies
+          run: pip3 install ansible molecule[docker] docker yamllint ansible-lint
+        - name: Test ${{ matrix.platform }}
+          run: molecule test --platform-name ${{ matrix.platform }}
+          env:
+            PY_COLORS: '1'
+            ANSIBLE_FORCE_COLOR: '1'
+
+#+end_src
+*** CD.yml
+Handles the CD workflow in github
+#+begin_src yaml :tangle ./.github/workflows/CD.yml
+
+  ---
+  ###########################################
+  # This is an auto generatd file.
+  # Do not edit directly. tag
+  # Refer to SearXNG_docker.org for details.
+  ###########################################
+  name: CD
+  on:
+    workflow_run:
+      workflows: ['CI']
+      branches:
+        - master
+      types:
+        - completed
+  jobs:
+    Publish:
+      name: Publish
+      runs-on: ubuntu-latest
+      if: ${{ github.event.workflow_run.conclusion == 'success' }}
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v3
+          with:
+            ref: ${{ github.event.pull_request.head.sha }}
+            fetch-depth: '0'
+        - name: Bump version and push tag
+          uses: anothrNick/github-tag-action@v1
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            WITH_V: true
+            DEFAULT_BUMP: patch
+            INITIAL_VERSION: 1.0.0
+        - name: GitHub release
+          uses: marvinpinto/action-automatic-releases@v1.2.1
+          with:
+            repo_token: ${{ secrets.GITHUB_TOKEN }}
+            automatic_release_tag: "latest"
+            prerelease: false
+        - name: Setup python
+          uses: actions/setup-python@v2
+          with:
+            python-version: '3.x'
+        - name: Install dependencies
+          run: pip3 install yamllint ansible-lint
+        - name: Release
+          uses: robertdebock/galaxy-action@1.2.0
+          with:
+            galaxy_api_key: ${{ secrets.MY_GALAXY }}
+
+#+end_src

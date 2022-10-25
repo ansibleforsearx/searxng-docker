@@ -1,0 +1,37 @@
+---
+###########################################
+# This is an auto generatd file.
+# Do not edit directly.
+# Refer to SearXNG_docker.org for details.
+###########################################
+name: CI
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+jobs:
+  Test:
+    name: Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform:
+          - ArchLinux
+          - Debian_11
+          - Fedora_37
+          - Suse_Tumbleweed
+    steps:
+      - name: Checkout codebase
+        uses: actions/checkout@v2
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - name: Install test dependencies
+        run: pip3 install ansible molecule[docker] docker yamllint ansible-lint
+      - name: Test ${{ matrix.platform }}
+        run: molecule test --platform-name ${{ matrix.platform }}
+        env:
+          PY_COLORS: '1'
+          ANSIBLE_FORCE_COLOR: '1'

@@ -1,0 +1,24 @@
+---
+###########################################
+# This is an auto generatd file.
+# Do not edit directly.
+# Refer to SearXNG_docker.org for details.
+###########################################
+- name: Ensure we have the ultra secret key
+  ansible.builtin.slurp:
+    src: "{{ searxng_path }}/searxng/key"
+  register: secret_key
+- name: Ensure we write the server settings block
+  ansible.builtin.blockinfile:
+    path: "{{ searxng_path }}/searxng/settings.yml"
+    content: |
+      server{{ ":" }}
+        base_url{{ ":" }} {{ searxng_base_url }}
+        port{{ ":" }} {{ searxng_port }}
+        bind_address{{ ":" }} "{{ searxng_bind_address }}"
+        secret_key{{ ":" }} "{{ secret_key.content }}"
+        limiter{{ ":" }} {{ searxng_limiter }}
+        image_proxy{{ ":" }} {{ searxng_image_proxy }}
+    insertafter: "# {mark} ANSIBLE MANAGED BLOCK insertion 2"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK insertion 3"
+  notify: Restart_searxng

@@ -1,0 +1,47 @@
+---
+###########################################
+# This is an auto generatd file.
+# Do not edit directly.
+# Refer to SearXNG_docker.org for details.
+###########################################
+galaxy_info:
+  role_name: searxng_docker
+  author: Searx Guy
+  namespace: ansibleforsearx
+  description: Install and configure SearXNG as a docker image.
+  license: GPL-3.0-only
+  min_ansible_version: '2.1'
+  platforms:
+    - name: ArchLinux
+      release:
+        - any
+    - name: Debian
+      release:
+        - bullseye
+    - name: opensuse
+      release:
+        - 42.3
+    - name: Fedora
+      release:
+        - 37
+    - name: GenericLinux
+      release:
+        - any
+  galaxy_tags:
+    - web
+    - system
+    - cloud
+    - search
+    - privacy
+    - database
+    - google
+    - deploy
+    - configuration
+    - docker
+    - searx
+    - searxng
+dependencies:
+  - role: geerlingguy.docker
+    vars:
+      docker_compose_package_state: present
+    when: "ansible_facts['os_family'] == 'RedHat'"

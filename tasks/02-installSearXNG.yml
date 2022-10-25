@@ -1,0 +1,17 @@
+---
+###########################################
+# This is an auto generatd file.
+# Do not edit directly.
+# Refer to SearXNG_docker.org for details.
+###########################################
+- name: Check for the git repo
+  ansible.builtin.stat:
+    path: "{{ searxng_path }}/.git"
+  register: repo_path
+- name: Ensure Searx is installed
+  ansible.builtin.git:
+    repo: "{{ searxng_repo }}"
+    dest: "{{ searxng_path }}"
+    clone: true
+    version: "{{ searxng_sha1 }}"
+  when: not repo_path.stat.exists

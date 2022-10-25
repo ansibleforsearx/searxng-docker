@@ -1,0 +1,57 @@
+---
+###########################################
+# This is an auto generatd file.
+# Do not edit directly.
+# Refer to SearXNG_docker.org for details.
+###########################################
+searxng_repo: 'https://github.com/searxng/searxng-docker.git'
+searxng_sha1: 'd4f06df911e91803d6af48b8f0e060f08429b767'
+searxng_path: '/usr/local/searxng-docker'
+searxng_service_name: 'searxng-docker.service'
+
+searxng_hostname: '# SEARXNG_HOSTNAME=<host>'
+searxng_letsencrypt: '# LETSENCRYPT_EMAIL=<email>'
+
+searxng_default_settings: 'true'
+
+searxng_debug: 'false'
+searxng_instance_name: 'SearXNG'
+searxng_privacypolicy_url: 'false'
+searxng_donation_url: 'https://docs.searxng.org/donate.html'
+searxng_contact_url: 'false'
+searxng_enable_metrics: 'true'
+
+searxng_safe_search: '0'
+searxng_autocomplete: ''
+searxng_default_lang: ''
+searxng_ban_time_on_fail: '5'
+searxng_max_ban_time_on_fail: '120'
+searxng_formats: 'html,'
+
+searxng_base_url: 'false'
+searxng_port: '8888'
+searxng_bind_address: '127.0.0.1'
+searxng_limiter: 'false'
+searxng_image_proxy: 'false'
+
+searxng_static_use_hash: 'false'
+searxng_default_locale: ''
+searxng_query_in_title: 'false'
+searxng_infinite_scroll: 'false'
+searxng_center_alignment: 'false'
+searxng_cache_url: 'https://web.archive.org/web/'
+searxng_default_theme: 'simple'
+searxng_simple_style: 'auto'
+
+searxng_redis_url: 'redis://redis:6379/0'
+
+searxng_request_timeout: '2.0'
+searxng_max_request_timeout: '10.0'
+searxng_useragent_suffix: ''
+searxng_pool_connections: '100'
+searxng_pool_maxsize: '10'
+searxng_enable_http2: 'true'
+
+searxng_path_to_docker_compose: '/usr/bin'
+
+searxng_path_to_systemd_units: '/etc/systemd/system'

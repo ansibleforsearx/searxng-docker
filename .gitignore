@@ -1,0 +1,15 @@
+###########################################
+# This is an auto generatd file.
+# Do not edit directly.
+# Refer to SearXNG_docker.org for details.
+###########################################
+!.gitignore
+!.yamllint
+!.ansible-lint
+!.localtesting
+!*.org
+!*.md
+!**/*.yml
+!**/*.yaml
+!**/inventory
+!LICENSE

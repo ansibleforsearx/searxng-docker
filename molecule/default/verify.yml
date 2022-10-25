@@ -1,0 +1,87 @@
+---
+###########################################
+# This is an auto generatd file.
+# Do not edit directly.
+# Refer to SearXNG_docker.org for details.
+###########################################
+- name: Verify
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: The systemd unit was created correctly
+      ansible.builtin.assert:
+        that:
+          ansible.builtin.stat:
+            path: '/etc/systemd/system/searxng-docker.service'
+          register: systemd_unit
+          failes_when:
+            - "systemd_unit.stat.exists != true"
+            - "systemd_unit.stat.readable != true"
+            - "systemd_unit.stat.size != 407 and ansible_facts['os_family'] != 'RedHat'"
+            - "systemd_unit.stat.size != 419 and ansible_facts['os_family'] == 'RedHat'"
+    - name: The settings file was created correctly
+      ansible.builtin.assert:
+        that:
+          ansible.builtin.stat:
+            path: '/usr/local/searxng-docker/searxng/settings.yml'
+          register: settings_file
+          fails_when:
+            - "settings_file.stat.exists != true"
+            - "settings_file.stat.readable != true"
+            - "settings_file.stat.size != 1564"
+    - name: The key file was created correctly
+      ansible.builtin.assert:
+        that:
+          ansible.builtin.stat:
+            path: '/usr/local/searxng-docker/searxng/key'
+          register: key_file
+          fails_when:
+            - "key_file.stat.exists != true"
+            - "key_file.stat.readable != true"
+            - "key_file.stat.size != 65"
+    - name: The env file was created correctly
+      ansible.builtin.assert:
+        that:
+          ansible.builtin.stat:
+            path: '/usr/local/searxng-docker/.env'
+          register: env_file
+          fails_when:
+            - "env_file.stat.exists != true"
+            - "env_file.stat.readable != true"
+            - "env_file.stat.size != 304"
+    - name: The docker container redist is running
+      ansible.builtin.assert:
+        that:
+          - docker_container_info:
+              name: redis
+            register: redist
+            fails_when: redist.exists != true
+    - name: The docker container caddy is running
+      ansible.builtin.assert:
+        that:
+          - docker_container_info:
+              name: caddy
+            register: caddy
+            fails_when: caddy.exists != true
+    - name: The docker container searxng is running
+      ansible.builtin.assert:
+        that:
+          - docker_container_info:
+              name: searxng
+            register: searxng
+            fails_when: searxng.exists != true
+    - name: Searxng service is enabled
+      ansible.builtin.assert:
+        that:
+          - ansible.builtin.service:
+              name: "searxng-docker.service"
+              enabled: true
+              check_mode: true
+    - name: Searxng is running
+      ansible.builtin.assert:
+        that:
+          - ansible.builtin.uri:
+              url: http://localhost
+              return_content: true
+            register: this
+            failed_when: "'searxng' is not in content"
