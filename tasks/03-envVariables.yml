@@ -6,12 +6,12 @@
 ###########################################
 - name: Ensure we can replace .env file settings
   ansible.builtin.lineinfile:
-    path: "{{ searxng_path }}/.env"
+    path: "{{ searxng_docker_path }}/.env"
     regexp: "{{ item.regexp }}"
     line: "{{ item.line }}"
   with_items:
     - regexp: '# SEARXNG_HOSTNAME='
-      line: "{{ searxng_hostname }}"
+      line: "{{ searxng_docker_hostname }}"
     - regexp: '# LETSENCRYPT='
-      line: "{{ searxng_letsencrypt }}"
+      line: "{{ searxng_docker_letsencrypt }}"
   notify: Restart_searxng

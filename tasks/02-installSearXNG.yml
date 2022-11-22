@@ -6,12 +6,12 @@
 ###########################################
 - name: Check for the git repo
   ansible.builtin.stat:
-    path: "{{ searxng_path }}/.git"
+    path: "{{ searxng_docker_path }}/.git"
   register: repo_path
 - name: Ensure Searx is installed
   ansible.builtin.git:
-    repo: "{{ searxng_repo }}"
-    dest: "{{ searxng_path }}"
+    repo: "{{ searxng_docker_repo }}"
+    dest: "{{ searxng_docker_path }}"
     clone: true
-    version: "{{ searxng_sha1 }}"
+    version: "{{ searxng_docker_sha1 }}"
   when: not repo_path.stat.exists

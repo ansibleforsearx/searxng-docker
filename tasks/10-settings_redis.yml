@@ -6,10 +6,10 @@
 ###########################################
 - name: Ensure we write the redis settings block
   ansible.builtin.blockinfile:
-    path: "{{ searxng_path }}/searxng/settings.yml"
+    path: "{{ searxng_docker_path }}/searxng/settings.yml"
     content: |
       redis{{ ":" }}
-        url{{ ":" }} {{ searxng_redis_url }}
+        url{{ ":" }} {{ searxng_docker_redis_url }}
     insertafter: "# {mark} ANSIBLE MANAGED BLOCK insertion 4"
     marker: "# {mark} ANSIBLE MANAGED BLOCK insertion 5"
   notify: Restart_searxng

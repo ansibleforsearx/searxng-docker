@@ -6,16 +6,16 @@
 ###########################################
 - name: Register the new service file
   ansible.builtin.stat:
-    path: "{{ searxng_path_to_systemd_units }}/{{ searxng_service_name }}"
+    path: "{{ searxng_docker_path_to_systemd_units }}/{{ searxng_docker_service_name }}"
   register: new_service_file
 - name: Ensure the SearXNG service file is copied for systemd
   ansible.builtin.copy:
     remote_src: true
-    src: "{{ searxng_path }}/{{ searxng_service_name }}"
-    dest: "{{ searxng_path_to_systemd_units }}/{{ searxng_service_name }}"
+    src: "{{ searxng_docker_path }}/{{ searxng_docker_service_name }}"
+    dest: "{{ searxng_docker_path_to_systemd_units }}/{{ searxng_docker_service_name }}"
     mode: '0655'
   when: not new_service_file.stat.exists
 - name: Ensure SearXNG loads at startup
   ansible.builtin.service:
-    name: "{{ searxng_service_name }}"
+    name: "{{ searxng_docker_service_name }}"
     enabled: true

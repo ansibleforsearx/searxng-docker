@@ -6,18 +6,18 @@
 ###########################################
 - name: Ensure we write the UI settings block
   ansible.builtin.blockinfile:
-    path: "{{ searxng_path }}/searxng/settings.yml"
+    path: "{{ searxng_docker_path }}/searxng/settings.yml"
     content: |
       ui{{ ":" }}
-        static_use_hash{{ ":" }} {{ searxng_static_use_hash }}
-        default_locale{{ ":" }} "{{ searxng_default_locale }}"
-        query_in_title{{ ":" }} {{ searxng_query_in_title }}
-        infinite_scroll{{ ":" }} {{ searxng_infinite_scroll }}
-        center_alignment{{ ":" }} {{ searxng_center_alignment }}
-        cache_url{{ ":" }} {{ searxng_cache_url }}
-        default_theme{{ ":" }} {{ searxng_default_theme }}
+        static_use_hash{{ ":" }} {{ searxng_docker_static_use_hash }}
+        default_locale{{ ":" }} "{{ searxng_docker_default_locale }}"
+        query_in_title{{ ":" }} {{ searxng_docker_query_in_title }}
+        infinite_scroll{{ ":" }} {{ searxng_docker_infinite_scroll }}
+        center_alignment{{ ":" }} {{ searxng_docker_center_alignment }}
+        cache_url{{ ":" }} {{ searxng_docker_cache_url }}
+        default_theme{{ ":" }} {{ searxng_docker_default_theme }}
         theme_args{{ ":" }}
-          simple_style{{ ":" }} {{ searxng_simple_style }}
+          simple_style{{ ":" }} {{ searxng_docker_simple_style }}
     insertafter: "# {mark} ANSIBLE MANAGED BLOCK insertion 3"
     marker: "# {mark} ANSIBLE MANAGED BLOCK insertion 4"
   notify: Restart_searxng

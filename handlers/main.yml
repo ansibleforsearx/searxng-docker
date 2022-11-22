@@ -11,5 +11,5 @@
     enabled: true
 - name: Restart_searxng
   ansible.builtin.service:
-    name: "{{ searxng_service_name }}"
+    name: "{{ searxng_docker_service_name }}"
     state: restarted

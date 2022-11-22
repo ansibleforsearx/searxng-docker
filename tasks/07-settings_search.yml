@@ -6,15 +6,15 @@
 ###########################################
 - name: Ensure the search settings are applied
   ansible.builtin.blockinfile:
-    path: "{{ searxng_path }}/searxng/settings.yml"
+    path: "{{ searxng_docker_path }}/searxng/settings.yml"
     content: |
       search{{ ":" }}
-        safe_search{{ ":" }} {{ searxng_safe_search }}
-        autocomplete{{ ":" }} "{{ searxng_autocomplete }}"
-        default_lang{{ ":" }} "{{ searxng_default_lang }}"
-        ban_time_on_fail{{ ":" }} {{ searxng_ban_time_on_fail }}
-        max_ban_time_on_fail{{ ":" }} {{ searxng_max_ban_time_on_fail }}
-        formats{{ ":" }} [{{ searxng_formats }}]
+        safe_search{{ ":" }} {{ searxng_docker_safe_search }}
+        autocomplete{{ ":" }} "{{ searxng_docker_autocomplete }}"
+        default_lang{{ ":" }} "{{ searxng_docker_default_lang }}"
+        ban_time_on_fail{{ ":" }} {{ searxng_docker_ban_time_on_fail }}
+        max_ban_time_on_fail{{ ":" }} {{ searxng_docker_max_ban_time_on_fail }}
+        formats{{ ":" }} [{{ searxng_docker_formats }}]
     insertafter: "# {mark} ANSIBLE MANAGED BLOCK insertion 1"
     marker: "# {mark} ANSIBLE MANAGED BLOCK insertion 2"
   notify: Restart_searxng
