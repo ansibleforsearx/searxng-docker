@@ -14,3 +14,4 @@
       line: "{{ searxng_hostname }}"
     - regexp: '# LETSENCRYPT='
       line: "{{ searxng_letsencrypt }}"
+  notify: Restart_searxng

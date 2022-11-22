@@ -162,6 +162,7 @@ The .env file has some options we can set. Let's expose them for our users.
         line: "{{ searxng_hostname }}"
       - regexp: '# LETSENCRYPT='
         line: "{{ searxng_letsencrypt }}"
+    notify: Restart_searxng
 
 #+end_src
 **** defaults/main.yml
