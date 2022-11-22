@@ -13,7 +13,7 @@ This role will probabbly work on the majority of Systemd distros but I can't tes
 
 Role Variables
 --------------
-Here are the variables and their defaults for more information refer to the [project documentation](https://docs.searxng.org/).
+Here are the variables and their defaults, none of which are manditory. For more information refer to the [project documentation](https://docs.searxng.org/).
 ```yaml
 searxng_repo: 'https://github.com/searxng/searxng-docker.git'
   # If you're maintaing an on premisis fork of the searxng-docker repo
@@ -87,13 +87,14 @@ Here's what the author uses to configure his laptop.
 ```yaml
 - hosts: all
   become: true
-- role: ansibleforsearx.searxng_docker
-    vars:
-      searxng_enable_metrics: 'false'
-      searxng_instance_name: 'MySearXNG'
-      searxng_autocomplete: 'duckduckgo'
-      searxng_simple_style: 'dark'
-      searxng_infinite_scroll: 'true'
+  roles:
+  - role: ansibleforsearx.searxng_docker
+      vars:
+        searxng_enable_metrics: 'false'
+        searxng_instance_name: 'MySearXNG'
+        searxng_autocomplete: 'duckduckgo'
+        searxng_simple_style: 'dark'
+        searxng_infinite_scroll: 'true'
 ```
 My browser's homepage is http://localhost as is it's default search engine. I clear cookies on exit with an exception for localhost. The individual search engine settings are stored in the browser cookie. I use https everwhere with an exception for localhost.
 
