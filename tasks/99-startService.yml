@@ -1,20 +1,14 @@
 ---
 ###########################################
-# This is an auto generatd file.
+# This is an auto generated file.
 # Do not edit directly.
 # Refer to SearXNG_docker.org for details.
 ###########################################
-- name: Register the new service file
-  ansible.builtin.stat:
-    path: "{{ searxng_docker_path_to_systemd_units }}/{{ searxng_docker_service_name }}"
-  register: new_service_file
 - name: Ensure the SearXNG service file is copied for systemd
-  ansible.builtin.copy:
-    remote_src: true
-    src: "{{ searxng_docker_path }}/{{ searxng_docker_service_name }}"
+  ansible.builtin.template:
+    src: searxng-docker.service.j2
     dest: "{{ searxng_docker_path_to_systemd_units }}/{{ searxng_docker_service_name }}"
     mode: '0655'
-  when: not new_service_file.stat.exists
 - name: Ensure SearXNG loads at startup
   ansible.builtin.service:
     name: "{{ searxng_docker_service_name }}"

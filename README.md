@@ -4,7 +4,7 @@ Install and configure [SearXNG](https://github.com/searxng/searxng) as a docker 
 
 Verified working Linux distros
 ------------------------------
-- Arch Linux
+~~- Arch Linux~~
 - Debian bullseye
 - openSUSE Tumbleweed
 - Fedora 37 <br/><br/> [![CI](https://github.com/ansibleforsearx/searxng-docker/actions/workflows/CI.yml/badge.svg)](https://github.com/ansibleforsearx/searxng-docker/actions/workflows/CI.yml)

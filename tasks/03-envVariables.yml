@@ -1,17 +1,12 @@
 ---
 ###########################################
-# This is an auto generatd file.
+# This is an auto generated file.
 # Do not edit directly.
 # Refer to SearXNG_docker.org for details.
 ###########################################
 - name: Ensure we can replace .env file settings
-  ansible.builtin.lineinfile:
-    path: "{{ searxng_docker_path }}/.env"
-    regexp: "{{ item.regexp }}"
-    line: "{{ item.line }}"
-  with_items:
-    - regexp: '# SEARXNG_HOSTNAME='
-      line: "{{ searxng_docker_hostname }}"
-    - regexp: '# LETSENCRYPT='
-      line: "{{ searxng_docker_letsencrypt }}"
+  ansible.builtin.template:
+    src: .env.j2
+    dest: '{{ searxng_docker_path }}/.env'
+    mode: 0655
   notify: Restart_searxng

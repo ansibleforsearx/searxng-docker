@@ -1,0 +1,48 @@
+{#
+###########################################
+# This is an auto generated file.
+# Do not edit directly.
+# Refer to SearXNG_docker.org for details.
+###########################################
+#}
+use_default_settings: {{ searxng_docker_default_settings }}
+general:
+  debug: {{ searxng_docker_debug }}
+  instance_name: "{{ searxng_docker_instance_name }}"
+  privacypolicy_url: {{ searxng_docker_privacypolicy_url }}
+  donation_url: {{ searxng_docker_donation_url }}
+  contact_url: {{ searxng_docker_contact_url }}
+  enable_metrics: {{ searxng_docker_enable_metrics }}
+search:
+  safe_search: {{ searxng_docker_safe_search }}
+  autocomplete: "{{ searxng_docker_autocomplete }}"
+  default_lang: "{{ searxng_docker_default_lang }}"
+  ban_time_on_fail: {{ searxng_docker_ban_time_on_fail }}
+  max_ban_time_on_fail: {{ searxng_docker_max_ban_time_on_fail }}
+  formats: [{{ searxng_docker_formats }}]
+server:
+  base_url: {{ searxng_docker_base_url }}
+  port: {{ searxng_docker_port }}
+  bind_address: "{{ searxng_docker_bind_address }}"
+  secret_key: "{{ secret_key.content }}"
+  limiter: {{ searxng_docker_limiter }}
+  image_proxy: {{ searxng_docker_image_proxy }}
+ui:
+  static_use_hash: {{ searxng_docker_static_use_hash }}
+  default_locale: "{{searxng_docker_default_locale }}"
+  query_in_title: {{ searxng_docker_query_in_title }}
+  infinite_scroll: {{ searxng_docker_infinite_scroll }}
+  center_alignment: {{ searxng_docker_center_alignment }}
+  cache_url: {{ searxng_docker_cache_url }}
+  default_theme: {{ searxng_docker_default_theme }}
+  theme_args:
+    simple_style: {{ searxng_docker_simple_style }}
+redis:
+  url: {{ searxng_docker_redis_url }}
+outgoing:
+  request_timeout: {{ searxng_docker_request_timeout }}
+  max_request_timeout: {{ searxng_docker_max_request_timeout }}
+  useragent_suffix: "{{ searxng_docker_useragent_suffix }}"
+  pool_connections: {{ searxng_docker_pool_connections }}
+  pool_maxsize: {{ searxng_docker_pool_maxsize }}
+  enable_http2: {{ searxng_docker_enable_http2 }}

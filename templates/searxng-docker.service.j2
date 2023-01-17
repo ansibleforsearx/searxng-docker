@@ -1,0 +1,23 @@
+{#
+###########################################
+# This is an auto generated file.
+# Do not edit directly.
+# Refer to SearXNG_docker.org for details.
+###########################################
+#}
+[Unit]
+Description=SearXNG service
+Requires=docker.service
+After=docker.service
+
+[Service]
+Restart=on-failure
+
+Environment=SEARXNG_DOCKERCOMPOSEFILE=docker-compose.yaml
+
+WorkingDirectory={{ searxng_docker_path }}
+ExecStart={{ searxng_docker_path_to_docker_compose }}/docker-compose -f ${SEARXNG_DOCKERCOMPOSEFILE} up --remove-orphans
+ExecStop={{ searxng_docker_path_to_docker_compose }}/docker-compose -f ${SEARXNG_DOCKERCOMPOSEFILE} down
+
+[Install]
+WantedBy=multi-user.target

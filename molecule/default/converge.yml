@@ -1,6 +1,6 @@
 ---
 ###########################################
-# This is an auto generatd file.
+# This is an auto generated file.
 # Do not edit directly.
 # Refer to SearXNG_docker.org for details.
 ###########################################
@@ -18,7 +18,7 @@
         update_cache: yes
       when: ansible_pkg_mgr == "yum"
     - name: Update apk cache
-      community.general.packaging.os.apk:
+      community.general.apk:
         update_cache: yes
       when: ansible_pkg_mgr == "apk"
     - name: Update dnf cache
@@ -26,14 +26,14 @@
         update_cache: yes
       when: ansible_pkg_mgr == "dnf"
     - name: Update zypper cache
-      community.general.packaging.os.zypper:
+      community.general.zypper:
         name: zypper
         update_cache: yes
       when: ansible_pkg_mgr == "zypper"
     - name: Update arch packages
-      community.general.packaging.os.pacman:
+      community.general.pacman:
         update_cache: yes
-        upgrade: yes
+        upgrade: no
       when: ansible_pkg_mgr == "pacman"
   tasks:
     - name: "Include ansibleforsearx.searxng_docker"

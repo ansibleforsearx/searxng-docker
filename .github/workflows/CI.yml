@@ -1,6 +1,6 @@
 ---
 ###########################################
-# This is an auto generatd file.
+# This is an auto generated file.
 # Do not edit directly.
 # Refer to SearXNG_docker.org for details.
 ###########################################
@@ -17,7 +17,7 @@ jobs:
     strategy:
       matrix:
         platform:
-          - ArchLinux
+          # - ArchLinux
           - Debian_11
           - Fedora_37
           - Suse_Tumbleweed

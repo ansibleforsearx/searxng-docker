@@ -1,32 +1,22 @@
 ---
 ###########################################
-# This is an auto generatd file.
+# This is an auto generated file.
 # Do not edit directly.
 # Refer to SearXNG_docker.org for details.
 ###########################################
-- name: Ensure we check for default settings file
-  ansible.builtin.lineinfile:
-    path: "{{ searxng_docker_path }}/searxng/settings.yml"
-    line: "# This is an ansible managed file."
-    state: present
-  check_mode: true
-  register: default_settings_file
-- name: Ensure we remove the default settings file
-  ansible.builtin.file:
-    path: "{{ searxng_docker_path }}/searxng/settings.yml"
-    state: absent
-  when: default_settings_file is changed  # noqa: no-handler
 - name: Ensure we create a key file
   ansible.builtin.shell:
-    'echo $(openssl rand -hex 32) >> {{ searxng_docker_path }}/searxng/key'
-  when: default_settings_file is changed  # noqa: no-handler
-- name: Ensure we update the use defaults settings value
-  ansible.builtin.blockinfile:
-    path: "{{ searxng_docker_path }}/searxng/settings.yml"
-    content: |
-      # This is an ansible managed file.
-      use_default_settings{{ ":" }} {{ searxng_docker_default_settings }}
-    create: true
-    mode: '0655'
-    marker: "# {mark} ANSIBLE MANAGED BLOCK insertion 0"
+    'echo $(openssl rand -hex 32) >> key'
+  args:
+    chdir: '{{ searxng_docker_path }}/searxng'
+    creates: 'key'
+- name: Ensure we have the ultra secret key
+  ansible.builtin.slurp:
+    src: "{{ searxng_docker_path }}/searxng/key"
+  register: secret_key
+- name: Ensure we apply our Searx settings
+  ansible.builtin.template:
+    src: settings.yml.j2
+    dest: '{{ searxng_docker_path }}/searxng/settings.yml'
+    mode: 0655
   notify: Restart_searxng

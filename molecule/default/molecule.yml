@@ -1,6 +1,6 @@
 ---
 ###########################################
-# This is an auto generatd file.
+# This is an auto generated file.
 # Do not edit directly.
 # Refer to SearXNG_docker.org for details.
 ###########################################
@@ -17,28 +17,32 @@ platforms:
     image: "monolithprojects/systemd-debian11:latest"
     command: ${MOLECULE_DOCKER_COMMAND:-""}
     volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroupns_mode: host
     privileged: true
     pre_build_image: true
   - name: Fedora_37
     image: "geerlingguy/docker-fedora37-ansible:latest"
     command: ${MOLECULE_DOCKER_COMMAND:-""}
     volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroupns_mode: host
     privileged: true
     pre_build_image: true
   - name: ArchLinux
     image: "chzerv/archlinux-systemd-ansible:latest"
     command: ${MOLECULE_DOCKER_COMMAND:-""}
     volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroupns_mode: host
     privileged: true
     pre_build_image: true
   - name: Suse_Tumbleweed
     image: "searxguy/docker-opensusetumbleweed-ansible:latest"
     command: ${MOLECULE_DOCKER_COMMAND:-""}
     volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroupns_mode: host
     privileged: true
     pre_build_image: true
 provisioner:

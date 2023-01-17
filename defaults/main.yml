@@ -1,6 +1,6 @@
 ---
 ###########################################
-# This is an auto generatd file.
+# This is an auto generated file.
 # Do not edit directly.
 # Refer to SearXNG_docker.org for details.
 ###########################################
@@ -13,27 +13,23 @@ searxng_docker_hostname: '# SEARXNG_HOSTNAME=<host>'
 searxng_docker_letsencrypt: '# LETSENCRYPT_EMAIL=<email>'
 
 searxng_docker_default_settings: 'true'
-
 searxng_docker_debug: 'false'
 searxng_docker_instance_name: 'SearXNG'
 searxng_docker_privacypolicy_url: 'false'
 searxng_docker_donation_url: 'https://docs.searxng.org/donate.html'
 searxng_docker_contact_url: 'false'
 searxng_docker_enable_metrics: 'true'
-
 searxng_docker_safe_search: '0'
 searxng_docker_autocomplete: ''
 searxng_docker_default_lang: ''
 searxng_docker_ban_time_on_fail: '5'
 searxng_docker_max_ban_time_on_fail: '120'
 searxng_docker_formats: 'html,'
-
 searxng_docker_base_url: 'false'
 searxng_docker_port: '8888'
 searxng_docker_bind_address: '127.0.0.1'
 searxng_docker_limiter: 'false'
 searxng_docker_image_proxy: 'false'
-
 searxng_docker_static_use_hash: 'false'
 searxng_docker_default_locale: ''
 searxng_docker_query_in_title: 'false'
@@ -42,9 +38,7 @@ searxng_docker_center_alignment: 'false'
 searxng_docker_cache_url: 'https://web.archive.org/web/'
 searxng_docker_default_theme: 'simple'
 searxng_docker_simple_style: 'auto'
-
 searxng_docker_redis_url: 'redis://redis:6379/0'
-
 searxng_docker_request_timeout: '2.0'
 searxng_docker_max_request_timeout: '10.0'
 searxng_docker_useragent_suffix: ''
