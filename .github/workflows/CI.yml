@@ -17,7 +17,7 @@ jobs:
     strategy:
       matrix:
         platform:
-          # - ArchLinux
+          - ArchLinux
           - Debian_11
           - Fedora_37
           - Suse_Tumbleweed

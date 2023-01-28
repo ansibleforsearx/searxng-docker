@@ -421,7 +421,7 @@ This role is intended to be distributed to the [[https://galaxy.ansible.com/][an
 
   Verified working Linux distros
   ------------------------------
-  ~~- Arch Linux~~
+  - Arch Linux
   - Debian bullseye
   - openSUSE Tumbleweed
   - Fedora 37 <br/><br/> [![CI](https://github.com/ansibleforsearx/searxng-docker/actions/workflows/CI.yml/badge.svg)](https://github.com/ansibleforsearx/searxng-docker/actions/workflows/CI.yml)
@@ -933,7 +933,7 @@ Fpr lightweight testing in github we'll use docker containsers
       privileged: true
       pre_build_image: true
     - name: ArchLinux
-      image: "chzerv/archlinux-systemd-ansible:latest"
+      image: "searxguy/docker-archlinux-ansible:latest"
       command: ${MOLECULE_DOCKER_COMMAND:-""}
       volumes:
         - /sys/fs/cgroup:/sys/fs/cgroup:rw
@@ -977,7 +977,7 @@ Handles the CI workflow in github
       strategy:
         matrix:
           platform:
-            # - ArchLinux
+            - ArchLinux
             - Debian_11
             - Fedora_37
             - Suse_Tumbleweed
