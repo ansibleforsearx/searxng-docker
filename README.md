@@ -77,7 +77,6 @@ searxng_docker_pool_connections: '100'
 searxng_docker_pool_maxsize: '10'
 searxng_docker_enable_http2: 'true'
 searxng_docker_path_to_docker_compose: '/usr/bin'
-# See REHL OS family hosts below for more detail.
 searxng_docker_path_to_systemd_units: '/etc/systemd/system'
 ```
 
@@ -97,10 +96,6 @@ Here's what the author uses to configure his laptop.
         searxng_docker_infinite_scroll: 'true'
 ```
 My browser's homepage is http://localhost as is it's default search engine. I clear cookies on exit with an exception for localhost. The individual search engine settings are stored in the browser cookie. I use https everwhere with an exception for localhost.
-
-REHL OS family hosts
---------------------
-This role uses the geerlingguy.docker role to install the docker dependencies on REHL OS family hosts. As such the path to docker compose is known and the searxng_docker_path_to_docker_compose variable is ignored on those hosts. The geerlingguy.docker role dependency should install itself when you install this role.
 
 License
 -------

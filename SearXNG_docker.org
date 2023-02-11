@@ -1,7 +1,7 @@
 #+title:SearXNG_docker ansible role
 #+STARTUP: align
 #+OPTIONS: toc:t
-- [[https://en.wikipedia.org/wiki/Literate_programming][Literate programming]] was used to create this role. All the files used by it including the readme file are auto-generated from this document. No edits should be made to any files other then this one. [[https://www.gnu.org/software/emacs/][Emacs]] with [[https://orgmode.org/][org-mode]] is the authors preferred development environment. it was tested using vagrant boxes for {Archlinux, Debian, Open suse, fedora}
+- [[https://en.wikipedia.org/wiki/Literate_programming][Literate programming]] was used to create this role. All the files used by it including the readme file are auto-generated from this document. No edits should be made to any files other then this one. [[https://www.gnu.org/software/emacs/][Emacs]] with [[https://orgmode.org/][org-mode]] is the authors preferred development environment. It was tested using docker images of {Archlinux, Debian, Open suse, fedora}
 * Git
 Git is used for version control over these files and like any good Git repo we have a .gitignore file.
 ** .gitignore
@@ -64,7 +64,7 @@ SearXNG provides a docker container to handle the heavy lifting of it's service 
 
 #+end_src
 *** 01-dependencies.yml
-Since we want this role to work with the broadest possible range of hosts we'll use ansible's built-in [[https://docs.ansible.com/ansible/latest/collections/ansible/builtin/package_module.html][package]] module to install our dependencies. We're using geerlingguy's docker install for REHL family OS's so no need to duplicate that work here. And apparently we can't take the existance of openssl for granted either. Dang snowflake distros.
+Since we want this role to work with the broadest possible range of hosts we'll use ansible's built-in [[https://docs.ansible.com/ansible/latest/collections/ansible/builtin/package_module.html][package]] module to install our dependencies.
 #+begin_src yaml :tangle ./tasks/01-dependencies.yml
 
   ---
@@ -73,18 +73,14 @@ Since we want this role to work with the broadest possible range of hosts we'll 
   # Do not edit directly.
   # Refer to SearXNG_docker.org for details.
   ###########################################
-  - name: Ensure docker is installed
+  - name: Ensure Searxng dependencies are installed
     ansible.builtin.package:
       name:
-        - docker
         - docker-compose
-    when: "ansible_facts['os_family'] != 'RedHat'"
-    notify: Start_docker
-  - name: Ensure git and openssl are installed
-    ansible.builtin.package:
-      name:
+        - docker
         - git
         - openssl
+    notify: Start_docker
 
 #+end_src
 ** main.yml
@@ -320,7 +316,7 @@ Expose the new settings to the user
 **** defaults/main.yml
 Expose the path to docker compose so users can override the default if needed
 #+begin_src yaml :tangle ./defaults/main.yml
-  
+
   searxng_docker_path_to_docker_compose: '/usr/bin'
 
 #+end_src
@@ -494,7 +490,6 @@ This role is intended to be distributed to the [[https://galaxy.ansible.com/][an
   searxng_docker_pool_maxsize: '10'
   searxng_docker_enable_http2: 'true'
   searxng_docker_path_to_docker_compose: '/usr/bin'
-  # See REHL OS family hosts below for more detail.
   searxng_docker_path_to_systemd_units: '/etc/systemd/system'
   ```
 
@@ -514,10 +509,6 @@ This role is intended to be distributed to the [[https://galaxy.ansible.com/][an
           searxng_docker_infinite_scroll: 'true'
   ```
   My browser's homepage is http://localhost as is it's default search engine. I clear cookies on exit with an exception for localhost. The individual search engine settings are stored in the browser cookie. I use https everwhere with an exception for localhost.
-
-  REHL OS family hosts
-  --------------------
-  This role uses the geerlingguy.docker role to install the docker dependencies on REHL OS family hosts. As such the path to docker compose is known and the searxng_docker_path_to_docker_compose variable is ignored on those hosts. The geerlingguy.docker role dependency should install itself when you install this role.
 
   License
   -------
@@ -577,24 +568,6 @@ Metadata used by ansible galaxy
       - docker
       - searx
       - searxng
-  dependencies:
-    - role: geerlingguy.docker
-      vars:
-        docker_compose_package_state: present
-      when: "ansible_facts['os_family'] == 'RedHat'"
-
-#+end_src
-** requirements.yml
-We've included another role as a dependency to our own. To ensure our customers can use that role we need to also make it a requirment. This way when users install this role that role should get installed as well.
-#+begin_src yaml :tangle ./requirements.yml
-
-  ---
-  ###########################################
-  # This is an auto generated file.
-  # Do not edit directly.
-  # Refer to SearXNG_docker.org for details.
-  ###########################################
-  - name: geerlingguy.docker
 
 #+end_src
 ** vars/main.yml
@@ -647,56 +620,6 @@ Perhaps I should have started here. When you write your roles you should start w
 #+end_src
 ** molecule
 Just the defaults for now
-*** converge.yml.localbackup
-#+begin_src yaml :tangle ./molecule/default/converge.yml.localbackup
-
-  ---
-  ###########################################
-  # This is an auto generated file.
-  # Do not edit directly.
-  # Refer to SearXNG_docker.org for details.
-  ###########################################
-  - name: Converge
-    hosts: all
-    gather_facts: true
-    become: true
-    pre_tasks:
-      - name: Update apt cache
-        ansible.builtin.apt:
-          update_cache: yes
-        when: ansible_pkg_mgr == "apt"
-      - name: Update yum cache
-        ansible.builtin.yum:
-          update_cache: yes
-        when: ansible_pkg_mgr == "yum"
-      - name: Update apk cache
-        community.general.apk:
-          update_cache: yes
-        when: ansible_pkg_mgr == "apk"
-      - name: Update dnf cache
-        ansible.builtin.dnf:
-          update_cache: yes
-        when: ansible_pkg_mgr == "dnf"
-      - name: Update zypper cache
-        community.general.zypper:
-          name: zypper
-          update_cache: yes
-        when: ansible_pkg_mgr == "zypper"
-      - name: Update arch packages
-        community.general.pacman:
-          update_cache: yes
-          upgrade: yes
-        when: ansible_pkg_mgr == "pacman"
-        register: update_arch
-      - name: Reboot arch
-        ansible.builtin.reboot:
-        when: update_arch is changed  # noqa: no-handler
-    tasks:
-      - name: "Include ansibleforsearx.searxng_docker"
-        ansible.builtin.include_role:
-          name: "ansibleforsearx.searxng_docker"
-
-#+end_src
 *** converge.yml
 #+begin_src yaml :tangle ./molecule/default/converge.yml
 
@@ -743,68 +666,6 @@ Just the defaults for now
           name: "ansibleforsearx.searxng_docker"
 
 #+end_src
-*** molecule.yml.localtesting
-If you have the resources using full virtual machines for testing makes development a lot easier. But when you pay money per cpu cycle use as little as possible.
-#+begin_src yaml :tangle ./molecule/default/molecule.yml.localtesting
-
-  ---
-  ###########################################
-  # This is an auto generated file.
-  # Do not edit directly.
-  # Refer to SearXNG_docker.org for details.
-  ###########################################
-  dependency:
-    name: galaxy
-  driver:
-    name: vagrant
-    provider:
-      name: libvirt
-    provision: false
-    cachier: machine
-    parallel: true
-  lint: |
-    set -e
-    yamllint .
-    ansible-lint
-  platforms:
-    - name: debian
-      box: debian/bullseye64
-      instance_raw_config_args:
-        - 'vm.synced_folder ".", "/vagrant", disabled: "true"'
-      memory: 1024
-      cpus: 1
-      provider_options:
-        video_type: 'vga'
-    - name: archlinux
-      box: archlinux/archlinux
-      instance_raw_config_args:
-        - 'vm.synced_folder ".", "/vagrant", disabled: "true"'
-      memory: 1024
-      cpus: 1
-      provider_options:
-        video_type: 'vga'
-    - name: suse
-      box: opensuse/Tumbleweed.x86_64
-      instance_raw_config_args:
-        - 'vm.synced_folder ".", "/vagrant", disabled: "true"'
-      memory: 1024
-      cpus: 1
-      provider_options:
-        video_type: 'vga'
-    - name: fedora
-      box: fedora/37-cloud-base
-      instance_raw_config_args:
-        - 'vm.synced_folder ".", "/vagrant", disabled: "true"'
-      memory: 1024
-      cpus: 1
-      provider_options:
-        video_type: 'vga'
-  provisioner:
-    name: ansible
-  verifier:
-    name: ansible
-
-#+end_src
 *** verify.yml
 #+begin_src yaml :tangle ./molecule/default/verify.yml
 
@@ -827,8 +688,7 @@ If you have the resources using full virtual machines for testing makes developm
             failes_when:
               - "systemd_unit.stat.exists != true"
               - "systemd_unit.stat.readable != true"
-              - "systemd_unit.stat.size != 407 and ansible_facts['os_family'] != 'RedHat'"
-              - "systemd_unit.stat.size != 419 and ansible_facts['os_family'] == 'RedHat'"
+              - "systemd_unit.stat.size != 407"
       - name: The settings file was created correctly
         ansible.builtin.assert:
           that:

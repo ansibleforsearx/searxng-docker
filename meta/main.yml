@@ -40,8 +40,3 @@ galaxy_info:
     - docker
     - searx
     - searxng
-dependencies:
-  - role: geerlingguy.docker
-    vars:
-      docker_compose_package_state: present
-    when: "ansible_facts['os_family'] == 'RedHat'"

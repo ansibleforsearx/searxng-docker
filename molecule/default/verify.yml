@@ -17,8 +17,7 @@
           failes_when:
             - "systemd_unit.stat.exists != true"
             - "systemd_unit.stat.readable != true"
-            - "systemd_unit.stat.size != 407 and ansible_facts['os_family'] != 'RedHat'"
-            - "systemd_unit.stat.size != 419 and ansible_facts['os_family'] == 'RedHat'"
+            - "systemd_unit.stat.size != 407"
     - name: The settings file was created correctly
       ansible.builtin.assert:
         that:
